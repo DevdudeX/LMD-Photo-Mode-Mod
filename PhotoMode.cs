@@ -416,7 +416,7 @@ namespace PhotoModeMod
 			float xOffset = 10;
 			float xOffset2 = 310;
 
-			GUI.Label(new Rect(10, 20, 1000, 200), "<b><color=white><size=14>DevdudeX's Photo Mode v"+ MOD_VERSION +"</size></color></b>");
+			GUI.Label(new Rect(xOffset, 5, 1000, 200), "<b><color=white><size=14>DevdudeX's Photo Mode v"+ MOD_VERSION +"</size></color></b>");
 
 			GUI.Label(new Rect(xOffset, 200, 1000, 200), "<b><color=lime><size=30>Photo Mode Active</size></color></b>");
 
