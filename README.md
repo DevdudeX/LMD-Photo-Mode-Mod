@@ -7,7 +7,7 @@ A MelonLoader mod that lets you pause time and fly around to position the camera
 Your game folder can be found by right-clicking on the game in steam and going 'Manage -> Browse local files'  
 
 Install MelonLoader to your LMD game install folder.  
-Look under 'Automated Installation':
+Look under 'Automated Installation':  
 https://melonwiki.xyz/#/  
 (v0.6.1 is the current version at time of writing)  
 
