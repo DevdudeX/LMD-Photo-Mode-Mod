@@ -71,19 +71,13 @@ namespace PhotoModeMod
 		float gamepadHorizontalInputStickR;
 		float gamepadVerticalInputStickR;
 		bool gamepadAnyButton0;	// 'A' Button
-		bool gamepadAnyButton2;	// 'X' Button
-		bool gamepadAnyButtonDown2;	// 'X' Button Down
 
-		bool gamepadAnyButton3;	// 'Y' Button Held
-		bool gamepadAnyButtonDown3;	// 'Y' Button Down
-
-		/// <summary>Left Bumper Hold State</summary>
-		bool gamepadAnyButton4;
+		/// <summary>Gamepad X Pressed State</summary>
+		bool gamepadAnyButtonDown2;
+		/// <summary>Gamepad Y Pressed State</summary>
+		bool gamepadAnyButtonDown3;
 		/// <summary>Left Bumper Pressed State</summary>
 		bool gamepadAnyButtonDown4;
-
-		/// <summary>Right Bumper Hold State</summary>
-		bool gamepadAnyButton5;
 		/// <summary>Right Bumper Pressed State</summary>
 		bool gamepadAnyButtonDown5;
 
@@ -229,18 +223,11 @@ namespace PhotoModeMod
 			gamepadAnyTriggerInputR = Input.GetAxisRaw("Joy1Axis10") + Input.GetAxisRaw("Joy2Axis10") + Input.GetAxisRaw("Joy3Axis10") + Input.GetAxisRaw("Joy4Axis10");
 			gamepadHorizontalInputStickR = Input.GetAxisRaw("Joy1Axis4") + Input.GetAxisRaw("Joy2Axis4") + Input.GetAxisRaw("Joy3Axis4") + Input.GetAxisRaw("Joy4Axis4");
 			gamepadVerticalInputStickR = Input.GetAxisRaw("Joy1Axis5") + Input.GetAxisRaw("Joy2Axis5") + Input.GetAxisRaw("Joy3Axis5") + Input.GetAxisRaw("Joy4Axis5");
+
 			gamepadAnyButton0 = Input.GetKey(KeyCode.Joystick1Button0) || Input.GetKey(KeyCode.Joystick2Button0) || Input.GetKey(KeyCode.Joystick3Button0) || Input.GetKey(KeyCode.Joystick4Button0);
-
-			gamepadAnyButton2 = Input.GetKey(KeyCode.Joystick1Button2) || Input.GetKey(KeyCode.Joystick2Button2) || Input.GetKey(KeyCode.Joystick3Button2) || Input.GetKey(KeyCode.Joystick4Button2);
 			gamepadAnyButtonDown2 = Input.GetKeyDown(KeyCode.Joystick1Button2) || Input.GetKeyDown(KeyCode.Joystick2Button2) || Input.GetKeyDown(KeyCode.Joystick3Button2) || Input.GetKeyDown(KeyCode.Joystick4Button2);
-
-			gamepadAnyButton3 = Input.GetKey(KeyCode.Joystick1Button3) || Input.GetKey(KeyCode.Joystick2Button3) || Input.GetKey(KeyCode.Joystick3Button3) || Input.GetKey(KeyCode.Joystick4Button3);
 			gamepadAnyButtonDown3 = Input.GetKeyDown(KeyCode.Joystick1Button3) || Input.GetKeyDown(KeyCode.Joystick2Button3) || Input.GetKeyDown(KeyCode.Joystick3Button3) || Input.GetKeyDown(KeyCode.Joystick4Button3);
-
-			gamepadAnyButton4 = Input.GetKey(KeyCode.Joystick1Button4) || Input.GetKey(KeyCode.Joystick2Button4) || Input.GetKey(KeyCode.Joystick3Button4) || Input.GetKey(KeyCode.Joystick4Button4);
 			gamepadAnyButtonDown4 = Input.GetKeyDown(KeyCode.Joystick1Button4) || Input.GetKeyDown(KeyCode.Joystick2Button4) || Input.GetKeyDown(KeyCode.Joystick3Button4) || Input.GetKeyDown(KeyCode.Joystick4Button4);
-
-			gamepadAnyButton5 = Input.GetKey(KeyCode.Joystick1Button5) || Input.GetKey(KeyCode.Joystick2Button5) || Input.GetKey(KeyCode.Joystick3Button5) || Input.GetKey(KeyCode.Joystick4Button5);
 			gamepadAnyButtonDown5 = Input.GetKeyDown(KeyCode.Joystick1Button5) || Input.GetKeyDown(KeyCode.Joystick2Button5) || Input.GetKeyDown(KeyCode.Joystick3Button5) || Input.GetKeyDown(KeyCode.Joystick4Button5);
 
 			if (Input.GetKeyDown(photoModeToggleKey) || gamepadAnyButtonDown3)
@@ -385,12 +372,10 @@ namespace PhotoModeMod
 		/// </summary>
 		private static float ClampAngle(float angle, float min, float max)
 		{
-			if (angle < -360f)
-			{
+			if (angle < -360f) {
 				angle += 360f;
 			}
-			if (angle > 360f)
-			{
+			if (angle > 360f) {
 				angle -= 360f;
 			}
 			return Mathf.Clamp(angle, min, max);
@@ -405,7 +390,7 @@ namespace PhotoModeMod
 			if (axis > deadzone) {
 				return axis;
 			}
-			if (axis < -deadzone) {
+			else if (axis < -deadzone) {
 				return axis;
 			}
 			return 0;
