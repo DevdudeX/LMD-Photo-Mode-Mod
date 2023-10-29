@@ -70,16 +70,21 @@ namespace PhotoModeMod
 		float gamepadAnyTriggerInputR;
 		float gamepadHorizontalInputStickR;
 		float gamepadVerticalInputStickR;
-		bool gamepadAnyButton0;	// 'A' Button
 
-		/// <summary>Gamepad X Pressed State</summary>
+		/// <summary>Gamepad [A] held state</summary>
+		bool gamepadAnyButton0;
+		/// <summary>Gamepad [B] pressed state</summary>
+		bool gamepadAnyButtonDown1;
+		/// <summary>Gamepad [X] pressed state</summary>
 		bool gamepadAnyButtonDown2;
-		/// <summary>Gamepad Y Pressed State</summary>
+		/// <summary>Gamepad [Y] pressed state</summary>
 		bool gamepadAnyButtonDown3;
-		/// <summary>Left Bumper Pressed State</summary>
+		/// <summary>Left Bumper pressed state</summary>
 		bool gamepadAnyButtonDown4;
-		/// <summary>Right Bumper Pressed State</summary>
+		/// <summary>Right Bumper pressed state</summary>
 		bool gamepadAnyButtonDown5;
+		/// <summary>Start Button pressed state</summary>
+		bool gamepadAnyButtonDown7;
 
 		public override void OnEarlyInitializeMelon()
 		{
@@ -225,20 +230,29 @@ namespace PhotoModeMod
 			gamepadVerticalInputStickR = Input.GetAxisRaw("Joy1Axis5") + Input.GetAxisRaw("Joy2Axis5") + Input.GetAxisRaw("Joy3Axis5") + Input.GetAxisRaw("Joy4Axis5");
 
 			gamepadAnyButton0 = Input.GetKey(KeyCode.Joystick1Button0) || Input.GetKey(KeyCode.Joystick2Button0) || Input.GetKey(KeyCode.Joystick3Button0) || Input.GetKey(KeyCode.Joystick4Button0);
+			gamepadAnyButtonDown1 = Input.GetKeyDown(KeyCode.Joystick1Button1) || Input.GetKeyDown(KeyCode.Joystick2Button1) || Input.GetKeyDown(KeyCode.Joystick3Button1) || Input.GetKeyDown(KeyCode.Joystick4Button1);
 			gamepadAnyButtonDown2 = Input.GetKeyDown(KeyCode.Joystick1Button2) || Input.GetKeyDown(KeyCode.Joystick2Button2) || Input.GetKeyDown(KeyCode.Joystick3Button2) || Input.GetKeyDown(KeyCode.Joystick4Button2);
 			gamepadAnyButtonDown3 = Input.GetKeyDown(KeyCode.Joystick1Button3) || Input.GetKeyDown(KeyCode.Joystick2Button3) || Input.GetKeyDown(KeyCode.Joystick3Button3) || Input.GetKeyDown(KeyCode.Joystick4Button3);
 			gamepadAnyButtonDown4 = Input.GetKeyDown(KeyCode.Joystick1Button4) || Input.GetKeyDown(KeyCode.Joystick2Button4) || Input.GetKeyDown(KeyCode.Joystick3Button4) || Input.GetKeyDown(KeyCode.Joystick4Button4);
 			gamepadAnyButtonDown5 = Input.GetKeyDown(KeyCode.Joystick1Button5) || Input.GetKeyDown(KeyCode.Joystick2Button5) || Input.GetKeyDown(KeyCode.Joystick3Button5) || Input.GetKeyDown(KeyCode.Joystick4Button5);
+			gamepadAnyButtonDown7 = Input.GetKeyDown(KeyCode.Joystick1Button7) || Input.GetKeyDown(KeyCode.Joystick2Button7) || Input.GetKeyDown(KeyCode.Joystick3Button7) || Input.GetKeyDown(KeyCode.Joystick4Button7);
 
 			if (Input.GetKeyDown(photoModeToggleKey) || gamepadAnyButtonDown3)
 			{
 				TogglePhotoMode();
 			}
 
+			if (inPhotoMode && (Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.Backspace) || gamepadAnyButtonDown1)) {
+				TogglePhotoMode(false);
+			}
+
 			// Here to allow disabling the game HUD.
 			if (Input.GetKeyDown(uiToggleKey) || gamepadAnyButtonDown2)
 			{
 				ToggleGameHUD();
+			}
+			if (Input.GetKey(KeyCode.Escape) || gamepadAnyButtonDown7) {
+				ToggleGameHUD(true);
 			}
 		}
 
@@ -270,9 +284,19 @@ namespace PhotoModeMod
 			defaultCameraScript = camTransform.gameObject.GetComponent<PlayCamera>();
 		}
 
+		/// <summary>
+		/// Toggles photo mode.
+		/// </summary>
 		private void TogglePhotoMode()
 		{
-			inPhotoMode = !inPhotoMode;
+			TogglePhotoMode(!inPhotoMode);
+		}
+		/// <summary>
+		/// Toggles photo mode to the provided state.
+		/// </summary>
+		private void TogglePhotoMode(bool active)
+		{
+			inPhotoMode = active;
 
 			if (inPhotoMode)
 			{
@@ -424,7 +448,7 @@ namespace PhotoModeMod
 			GUI.Label(new Rect(xOffset2, 380, 1000, 200), "<b><color=cyan><size=30>|    [LShift] or [Gamepad A]</size></color></b>");
 
 			GUI.Label(new Rect(xOffset, 410, 1000, 200), "<b><color=red><size=30>Reset Angles</size></color></b>");
-			GUI.Label(new Rect(xOffset2, 410, 1000, 200), "<b><color=cyan><size=30>|    [Keyboard K]</size></color></b>");
+			GUI.Label(new Rect(xOffset2, 410, 1000, 200), "<b><color=cyan><size=30>|    [Keyboard K] or [DPAD Up]</size></color></b>");
 		}
 		public override void OnDeinitializeMelon()
 		{

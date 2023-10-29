@@ -27,7 +27,7 @@ This file can be opened with any text editor and contains all the mods settings.
 #### Keybinds
 - [`Mouse`] or [`Right Stick`] Look around  
 - [`WASD`] or [`Left Stick`] Move around  
-- [`Space / LControl`] or [`LTrigger / RTrigger`] Move up and down  
+- [`Space / LControl`] or [`L-Trigger / R-Trigger`] Move up and down  
 - [`LShift`] or [`Gamepad A`] Move faster while held  
 - [`Keyboard P`] or [`Gamepad Y`] Toggle photo mode  
 - [`Keyboard H`] or [`Gamepad X`] Toggle the game HUD and UI  
