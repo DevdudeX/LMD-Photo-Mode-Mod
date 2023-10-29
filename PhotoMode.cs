@@ -27,6 +27,7 @@ namespace PhotoModeMod
 		private MelonPreferences_Entry<float> cfg_mSensitivityVertical;
 		private MelonPreferences_Entry<float> cfg_mSensitivityMultiplier;
 		private MelonPreferences_Entry<bool> cfg_mInvertHorizontal;
+		private MelonPreferences_Entry<bool> cfg_mInvertVertical;
 
 		private MelonPreferences_Entry<float> cfg_gamepadSensHorizontal;
 		private MelonPreferences_Entry<float> cfg_gamepadSensVertical;
@@ -114,6 +115,7 @@ namespace PhotoModeMod
 			cfg_mSensitivityVertical = mouseSettingsCat.CreateEntry<float>("VerticalSensitivity", 1.0f);
 			cfg_mSensitivityMultiplier = mouseSettingsCat.CreateEntry<float>("SensitivityMultiplier", 1f);
 			cfg_mInvertHorizontal = mouseSettingsCat.CreateEntry<bool>("InvertHorizontal", false);
+			cfg_mInvertVertical = mouseSettingsCat.CreateEntry<bool>("InvertVertical", false);
 
 			// Gamepad Settings
 			cfg_gamepadSensHorizontal = gamepadSettingsCat.CreateEntry<float>("GamepadHorizontalSensitivity", 0.6f);
@@ -172,15 +174,35 @@ namespace PhotoModeMod
 			// Vertical movement will make camera rotate along x-axis (your ear-to-ear axis)
 
 			// Mouse input
-			rotHorizontal += Input.GetAxisRaw("Mouse X") * cfg_mSensitivityHorizontal.Value * cfg_mSensitivityMultiplier.Value;
-			rotVertical += Input.GetAxisRaw("Mouse Y") * cfg_mSensitivityVertical.Value * cfg_mSensitivityMultiplier.Value;
+			if (cfg_mInvertHorizontal.Value) {
+				rotHorizontal -= Input.GetAxisRaw("Mouse X") * cfg_mSensitivityHorizontal.Value * cfg_mSensitivityMultiplier.Value;
+			}
+			else {
+				rotHorizontal += Input.GetAxisRaw("Mouse X") * cfg_mSensitivityHorizontal.Value * cfg_mSensitivityMultiplier.Value;
+			}
+			if (cfg_mInvertVertical.Value) {
+				rotVertical -= Input.GetAxisRaw("Mouse Y") * cfg_mSensitivityVertical.Value * cfg_mSensitivityMultiplier.Value;
+			}
+			else {
+				rotVertical += Input.GetAxisRaw("Mouse Y") * cfg_mSensitivityVertical.Value * cfg_mSensitivityMultiplier.Value;
+			}
 
 			// Controller input
-			rotHorizontal += ApplyInnerDeadzone(gamepadHorizontalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensHorizontal.Value * cfg_gamepadSensMultiplier.Value;
-			rotVertical -= ApplyInnerDeadzone(gamepadVerticalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensVertical.Value * cfg_gamepadSensMultiplier.Value;
+			if (cfg_gamepadInvertHorizontal.Value) {
+				rotHorizontal -= ApplyInnerDeadzone(gamepadHorizontalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensHorizontal.Value * cfg_gamepadSensMultiplier.Value;
+			}
+			else {
+				rotHorizontal += ApplyInnerDeadzone(gamepadHorizontalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensHorizontal.Value * cfg_gamepadSensMultiplier.Value;
+			}
+			if (cfg_gamepadInvertVertical.Value) {
+				rotVertical += ApplyInnerDeadzone(gamepadVerticalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensVertical.Value * cfg_gamepadSensMultiplier.Value;
+			}
+			else {
+				rotVertical -= ApplyInnerDeadzone(gamepadVerticalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensVertical.Value * cfg_gamepadSensMultiplier.Value;
+			}
 
-			rotVertical = ClampAngle(rotVertical, (float)xMinLimit, (float)xMaxLimit);  // Clamp the up-down rotation
-
+			// Clamp the up-down rotation
+			rotVertical = ClampAngle(rotVertical, (float)xMinLimit, (float)xMaxLimit);
 
 			if (Input.GetKeyDown(KeyCode.Q)) {
 				rotRoll += 1;
