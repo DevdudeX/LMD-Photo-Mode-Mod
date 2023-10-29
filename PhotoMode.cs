@@ -300,7 +300,6 @@ namespace PhotoModeMod
 				// Enable normal camera controller
 				defaultCameraScript.enabled = true;
 
-
 				// Free the cursor
 				Cursor.lockState = CursorLockMode.None;
 				Cursor.visible = true;

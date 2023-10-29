@@ -1,4 +1,4 @@
-# Alternative Camera for Lonely Mountains: Downhill
+# Photo Mode for Lonely Mountains: Downhill
 A MelonLoader mod that lets you pause time and fly around to position the camera freely, perfect for taking screenshots!
 
 
@@ -14,13 +14,13 @@ https://melonwiki.xyz/#/
 Run the game once then exit. (See **Known Issues & Fixes** if your game freezes on quit)  
 If successful the Melon Loader loading screen should appear on launch. 
 
-Add `PhotoModeMod.dll` to the `Mods` folder in your LMD game folder.  
+Download `PhotoModeMod.dll` from the releases and add it to the `Mods` folder in your LMD game folder.  
 
 #### Loading The Mod In-Game
 After loading into a level wait to be able to move the bike then hit [`Keyboard P`] or [`Gamepad Y`].
 
 #### Tweaking values
-A config file is generated in '[LMD folder]/UserData/PhotoModeSettings.cfg'.  
+A config file is generated in '`[LMD folder]/UserData/PhotoModeSettings.cfg`'.  
 This file can be opened with any text editor and contains all the mods settings.  
 
 
