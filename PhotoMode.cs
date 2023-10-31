@@ -1,20 +1,25 @@
-﻿using MelonLoader;
+﻿// Mod
+using MelonLoader;
 using PhotoModeMod;
+// Unity
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
+// Megagon
 using Il2CppMegagon.Downhill.Cameras;
 
-[assembly: MelonInfo(typeof(PhotoMode), "Photo Mode", "1.0.1", "DevdudeX")]
+[assembly: MelonInfo(typeof(PhotoMode), "Photo Mode", "1.0.2", "DevdudeX")]
 [assembly: MelonGame()]
 namespace PhotoModeMod
 {
 	public class PhotoMode : MelonMod
 	{
 		// Keep this updated!
-		private const string MOD_VERSION = "1.0.1";
+		private const string MOD_VERSION = "1.0.2";
 		public static PhotoMode instance;
-		private static KeyCode photoModeToggleKey;
-		private static KeyCode uiToggleKey;
-		private static KeyCode settingsResetKey;
+		private KeyCode photoModeToggleKey;
+		private KeyCode uiToggleKey;
+		private KeyCode settingsResetKey;
+		private KeyCode focusModeModifierKey;
 
 		private MelonPreferences_Category mainSettingsCat;
 		private MelonPreferences_Category mouseSettingsCat;
@@ -40,51 +45,55 @@ namespace PhotoModeMod
 		private MelonPreferences_Entry<bool> cfg_gamepadInvertVertical;
 
 		// Camera angle limits
-		private static int xMinLimit = -88;
-		private static int xMaxLimit = 88;
+		private int xMinLimit = -88;
+		private int xMaxLimit = 88;
 
 		/// <summary>The main camera itself. Used to set the field of view.</summary>
-		private static Camera mainCameraComponent;
+		private Camera mainCameraComponent;
 		/// <summary>The ui camera. Used to toggle hud rendering.</summary>
-		private static Camera uiRendererCameraComponent;
-		private static PlayCamera defaultCameraScript;
-		private static Transform camTransform;
+		private Camera uiRendererCameraComponent;
+		private PlayCamera defaultCameraScript;
+		private Transform camTransform;
+		private GameObject postProcessingObject;
+		private DepthOfField m_dofSettings;
 
-		private static Quaternion rotation;
+		private Quaternion rotation;
 		/// <summary>Camera rotation around vertical y-axis (left-right)</summary>
-		private static float rotHorizontal;
+		private float rotHorizontal;
 		/// <summary>Camera rotation around x-axis (ear-to-ear or up-down)</summary>
-		private static float rotVertical;
+		private float rotVertical;
 		/// <summary>Camera rotation around z-axis (forward-facing)</summary>
-		private static float rotRoll;
+		private float rotRoll;
 
-		private static bool inPhotoMode;
-		private static float baseTimeScale;
-		private static float baseFoV;
+		private bool inPhotoMode;
+		private bool hasDOFSettings;
+		private float baseTimeScale;
+		private float baseFoV;
+		private float baseFocusDistanceDoF;
 
 		// Inputs
-		float gamepadAnyDpadHorizontal;
-		float gamepadAnyDpadVertical;
+		private float gamepadAnyDpadHorizontal;
+		private float gamepadAnyDpadVertical;
 
-		float gamepadAnyTriggerInputL;
-		float gamepadAnyTriggerInputR;
-		float gamepadHorizontalInputStickR;
-		float gamepadVerticalInputStickR;
+		private float gamepadAnyTriggerInputL;
+		private float gamepadAnyTriggerInputR;
+		private float gamepadHorizontalInputStickR;
+		private float gamepadVerticalInputStickR;
 
 		/// <summary>Gamepad [A] held state</summary>
-		bool gamepadAnyButton0;
+		private bool gamepadAnyButton0;
 		/// <summary>Gamepad [B] pressed state</summary>
-		bool gamepadAnyButtonDown1;
+		private bool gamepadAnyButtonDown1;
 		/// <summary>Gamepad [X] pressed state</summary>
-		bool gamepadAnyButtonDown2;
+		private bool gamepadAnyButtonDown2;
 		/// <summary>Gamepad [Y] pressed state</summary>
-		bool gamepadAnyButtonDown3;
+		private bool gamepadAnyButtonDown3;
 		/// <summary>Left Bumper pressed state</summary>
-		bool gamepadAnyButtonDown4;
+		private bool gamepadAnyButtonDown4;
 		/// <summary>Right Bumper pressed state</summary>
-		bool gamepadAnyButtonDown5;
+		private bool gamepadAnyButtonDown5;
 		/// <summary>Start Button pressed state</summary>
-		bool gamepadAnyButtonDown7;
+		private bool gamepadAnyButtonDown7;
 
 		public override void OnEarlyInitializeMelon()
 		{
@@ -92,6 +101,7 @@ namespace PhotoModeMod
 			photoModeToggleKey = KeyCode.P;
 			uiToggleKey = KeyCode.H;
 			settingsResetKey = KeyCode.K;
+			focusModeModifierKey = KeyCode.F;
 		}
 
 		public override void OnInitializeMelon()
@@ -148,25 +158,38 @@ namespace PhotoModeMod
 
 		private void CameraLogic()
 		{
-			Vector3 translation = Vector3.zero;
-
+			bool inFocusMode = hasDOFSettings && (Input.GetKey(focusModeModifierKey) || gamepadAnyDpadVertical < 0);
 			if (Input.GetAxis("Mouse ScrollWheel") > 0f || gamepadAnyButtonDown5)
 			{
-				// Scrolling forward; zoom in
-				mainCameraComponent.fieldOfView -= 1;
+				// Scrolling forward / right bumper
+				if (inFocusMode) {
+					// Move DoF focus further away
+					m_dofSettings.focusDistance.value = m_dofSettings.focusDistance.GetValue<float>() + 0.05f;
+				}
+				else {
+					// FoV zoom in
+					mainCameraComponent.fieldOfView -= 1;
+				}
 			}
 			else if (Input.GetAxis("Mouse ScrollWheel") < 0f || gamepadAnyButtonDown4)
 			{
-				// Scrolling backwards; zoom out
-				mainCameraComponent.fieldOfView += 1;
+				// Scrolling backwards / left bumper
+				if (inFocusMode) {
+					// Move DoF focus further away
+					m_dofSettings.focusDistance.value = m_dofSettings.focusDistance.GetValue<float>() - 0.05f;
+				}
+				else {
+					// FoV zoom out
+					mainCameraComponent.fieldOfView += 1;
+				}
 			}
 
 			// Moving the camera
-			translation = GetInputTranslationDirection() * cfg_movementSpeed.Value * Time.fixedDeltaTime;
+			Vector3 moveVector = InputToMoveVector() * cfg_movementSpeed.Value * Time.fixedDeltaTime;
 
 			// Speed up movement when shift key held
 			if (Input.GetKey(KeyCode.LeftShift) || gamepadAnyButton0) {
-				translation *= cfg_movementSprintMult.Value;
+				moveVector *= cfg_movementSprintMult.Value;
 			}
 
 			// Horizontal movement will make camera rotate around vertical y-axis
@@ -212,7 +235,7 @@ namespace PhotoModeMod
 			rotRoll += -gamepadAnyDpadHorizontal * 4f * Time.fixedDeltaTime;
 
 			rotation = Quaternion.Euler(-rotVertical, rotHorizontal, rotRoll);
-			Vector3 newPosition = camTransform.position + translation;
+			Vector3 newPosition = camTransform.position + moveVector;
 
 			// Apply values
 			camTransform.position = newPosition;
@@ -242,7 +265,7 @@ namespace PhotoModeMod
 				TogglePhotoMode();
 			}
 
-			if (inPhotoMode && (Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.Backspace) || gamepadAnyButtonDown1)) {
+			if (inPhotoMode && (Input.GetKey(KeyCode.Escape) || Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.Backspace) || gamepadAnyButtonDown1)) {
 				TogglePhotoMode(false);
 			}
 
@@ -251,8 +274,10 @@ namespace PhotoModeMod
 			{
 				ToggleGameHUD();
 			}
+
+			// Force enable hud when opening menu
 			if (Input.GetKey(KeyCode.Escape) || gamepadAnyButtonDown7) {
-				ToggleGameHUD(true);
+				ToggleGameHUD(true, false);
 			}
 		}
 
@@ -275,13 +300,12 @@ namespace PhotoModeMod
 		/// </summary>
 		private void GrabObjects()
 		{
-			LoggerInstance.Msg("Grabbing required GameObjects.");
-
-			// Assigning GO's
 			camTransform = GameObject.Find("PlayCamera(Clone)").GetComponent<Transform>();
 			mainCameraComponent = camTransform.gameObject.GetComponent<Camera>();
 			uiRendererCameraComponent = GameObject.Find("UICam").GetComponent<Camera>();
 			defaultCameraScript = camTransform.gameObject.GetComponent<PlayCamera>();
+			postProcessingObject = camTransform.Find("DefaultPostProcessing").gameObject;
+			hasDOFSettings = postProcessingObject.GetComponent<PostProcessVolume>().sharedProfile.TryGetSettings<DepthOfField>(out m_dofSettings);
 		}
 
 		/// <summary>
@@ -297,26 +321,27 @@ namespace PhotoModeMod
 		private void TogglePhotoMode(bool active)
 		{
 			inPhotoMode = active;
-
 			if (inPhotoMode)
 			{
+				//LoggerInstance.Msg("Toggle photo mode --> ["+ inPhotoMode +"]");
 				// Enter photo mode
-				LoggerInstance.Msg("Toggle photo mode ==> ["+ inPhotoMode +"]");
-
 				MelonEvents.OnGUI.Subscribe(DrawInfoText, 100); // Register the info label
 				baseTimeScale = Time.timeScale; // Save the original time scale before freezing
 				Time.timeScale = 0;
 
 				GrabObjects();
 
+				// Save the original FoV and DoF focus distance
+				baseFoV = mainCameraComponent.fieldOfView;
+				baseFocusDistanceDoF = m_dofSettings.focusDistance.GetValue<float>();
+
+				// Save camera rotation for later calculations
 				rotHorizontal = camTransform.eulerAngles.y;
 				rotVertical = -camTransform.eulerAngles.x;
 				rotRoll = 0;
 
 				// Disable normal camera controller
 				defaultCameraScript.enabled = false;
-
-				baseFoV = mainCameraComponent.fieldOfView;	// Save the original FoV
 
 				// Lock and hide the cursor
 				Cursor.lockState = CursorLockMode.Locked;
@@ -325,11 +350,10 @@ namespace PhotoModeMod
 			else
 			{
 				// Exit photo mode
-				LoggerInstance.Msg("Toggle photo mode ==> ["+ inPhotoMode +"]");
-
 				MelonEvents.OnGUI.Unsubscribe(DrawInfoText); // Unregister the info label
 				Time.timeScale = baseTimeScale; // Reset the time scale to what it was before we froze the time
 				mainCameraComponent.fieldOfView = baseFoV;	// Restore the original FoV
+				m_dofSettings.focusDistance.value = baseFocusDistanceDoF;	// Restore the original focus distance for DoF
 				rotRoll = 0;
 
 				// Enable normal camera controller
@@ -341,7 +365,10 @@ namespace PhotoModeMod
 			}
 		}
 
-		private Vector3 GetInputTranslationDirection()
+		/// <summary>
+		/// Translates user input into a movement direction.
+		/// </summary>
+		private Vector3 InputToMoveVector()
 		{
 			Vector3 direction = new Vector3();
 
@@ -369,26 +396,27 @@ namespace PhotoModeMod
 			if (uiRendererCameraComponent == null) {
 				return;
 			}
-			ToggleGameHUD(!uiRendererCameraComponent.enabled);
+			ToggleGameHUD(!uiRendererCameraComponent.enabled, true);
 		}
 		/// <summary>
 		/// Enables or disables rendering of the game HUD.
 		/// </summary>
 		/// <param name="visible">Should the HUD be rendered.</param>
-		private void ToggleGameHUD(bool visible)
+		private void ToggleGameHUD(bool visible, bool drawInfo)
 		{
 			if (uiRendererCameraComponent == null) {
 				return;
 			}
 			// Toggle UI camera rendering
 			uiRendererCameraComponent.enabled = visible;
-			if (visible) {
-				MelonEvents.OnGUI.Subscribe(DrawInfoText, 100); // Register the info label
+
+			// Handle info drawing
+			if (visible && drawInfo) {
+				MelonEvents.OnGUI.Subscribe(DrawInfoText, 100);
 			}
 			else {
-				MelonEvents.OnGUI.Unsubscribe(DrawInfoText); // Unregister the info label
+				MelonEvents.OnGUI.Unsubscribe(DrawInfoText);
 			}
-			LoggerInstance.Msg("Toggled hud rendering ==> [" + uiRendererCameraComponent.enabled + "]");
 		}
 
 		/// <summary>
@@ -426,7 +454,6 @@ namespace PhotoModeMod
 			float xOffset2 = 310;
 
 			GUI.Label(new Rect(xOffset, 5, 1000, 200), "<b><color=white><size=14>DevdudeX's Photo Mode v"+ MOD_VERSION +"</size></color></b>");
-
 			GUI.Label(new Rect(xOffset, 200, 1000, 200), "<b><color=lime><size=30>Photo Mode Active</size></color></b>");
 
 			GUI.Label(new Rect(xOffset, 230, 1000, 200), "<b><color=cyan><size=30>Toggle Photo Mode</size></color></b>");
