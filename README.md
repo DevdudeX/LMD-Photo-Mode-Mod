@@ -25,16 +25,19 @@ This file can be opened with any text editor and contains all the mods settings.
 
 
 #### Keybinds
-- `[Mouse]` or `[Right Stick]` Look around  
-- `[WASD]` or `[Left Stick]` Move around  
-- `[Space / LControl]` or `[L-Trigger / R-Trigger]` Move up and down  
-- `[LShift]` or `Gamepad [A]` Move faster while held  
-- `KB [P]` or `Gamepad [Y]` Toggle photo mode  
-- `KB [H]` or `Gamepad [X]` Toggle the game HUD and UI  
-- `KB [K]` or `[Dpad Up]` Reset camera rotation and FoV  
-- `[Mouse Scroll]` or `Gamepad [LB / RB]` Change the cameras Field of View  
-- `KB [Q / E]` or `[Dpad Horizontal]` Tilt camera left and right  
-- `KB Hold [F] + [Mouse Scroll]` or `Hold [Dpad Down] + [LB / RB]` Change Depth of Field focus distance  
+| Keyboard & Mouse      | Gamepad                   | Action                               |
+| ---                   | ---                       | ---                                  |
+| Mouse                 | Right Stick               | Look around                          |
+| W, A, S, D            | Left Stick                | Move around                          |
+| Space / LControl      | L-Trigger / R-Trigger     | Move up and down                     |
+| LShift                | A Button                  | Move faster while held               |
+|                       |                           |                                      |
+| P                     | Y Button                  | Toggle photo mode                    |
+| H                     | X Button                  | Toggle the game HUD and UI           |
+| K                     | Dpad ▲                    | Reset camera rotation and FoV        |
+| Mouse Scroll          | L-Bumper / R-Bumper       | Change Field of View                 |
+| Q / E                 | Dpad ◄ / ►                | Tilt camera left and right           |
+| Hold F + Mouse Scroll | Hold Dpad ▼ + LB / RB     | Change Depth of Field focus distance |
 
 
 #### Known Issues & Fixes
