@@ -34,6 +34,7 @@ This file can be opened with any text editor and contains all the mods settings.
 - [`Keyboard K`] or [`Dpad Up`] Reset camera rotation and FoV  
 - [`Mouse Scroll`] or [`Gamepad LB / RB`] Change the cameras Field of View  
 - [`Keyboard Q / E`] or [`Dpad Horizontal`] Tilt camera left and right  
+- [`Keyboard F + Mouse Scroll`] or [`Gamepad LB / RB + Dpad Down`] Adjust focus distance of Depth of Field  
 
 
 #### Known Issues & Fixes
