@@ -31,7 +31,6 @@ This file can be opened with any text editor and contains all the mods settings.
 | W, A, S, D            | Left Stick                | Move around                          |
 | Space / LControl      | L-Trigger / R-Trigger     | Move up and down                     |
 | LShift                | A Button                  | Move faster while held               |
-|                       |                           |                                      |
 | P                     | Y Button                  | Toggle photo mode                    |
 | H                     | X Button                  | Toggle the game HUD and UI           |
 | K                     | Dpad ▲                    | Reset camera rotation and FoV        |
