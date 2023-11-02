@@ -20,7 +20,7 @@ Download `PhotoModeMod.dll` from the releases and add it to the `Mods` folder in
 After loading into a level wait to be able to move the bike then hit `Keyboard [P]` or `Gamepad [Y]`.
 
 #### Tweaking values
-A config file is generated in '`[LMD folder]/UserData/PhotoModeSettings.cfg`'.  
+A config file is generated in `[LMD folder]/UserData/PhotoModeSettings.cfg`.  
 This file can be opened with any text editor and contains all the mods settings.  
 
 

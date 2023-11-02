@@ -74,12 +74,10 @@ namespace PhotoModeMod
 		// Inputs
 		private float gamepadAnyDpadHorizontal;
 		private float gamepadAnyDpadVertical;
-
 		private float gamepadAnyTriggerInputL;
 		private float gamepadAnyTriggerInputR;
 		private float gamepadHorizontalInputStickR;
 		private float gamepadVerticalInputStickR;
-
 		/// <summary>Gamepad [A] held state</summary>
 		private bool gamepadAnyButton0;
 		/// <summary>Gamepad [B] pressed state</summary>
@@ -102,6 +100,8 @@ namespace PhotoModeMod
 			uiToggleKey = KeyCode.H;
 			settingsResetKey = KeyCode.K;
 			focusModeModifierKey = KeyCode.F;
+
+			MelonEvents.OnGUI.Subscribe(DrawInfoText, 100);
 		}
 
 		public override void OnInitializeMelon()
@@ -146,7 +146,7 @@ namespace PhotoModeMod
 
 		public override void OnLateUpdate()
 		{
-			HandleInputs();
+			ProcessInputs();
 
 			if (!inPhotoMode) {
 				return;
@@ -159,12 +159,14 @@ namespace PhotoModeMod
 		private void CameraLogic()
 		{
 			bool inFocusMode = hasDOFSettings && (Input.GetKey(focusModeModifierKey) || gamepadAnyDpadVertical < 0);
+			bool holdingSprint = Input.GetKey(KeyCode.LeftShift) || gamepadAnyButton0;
+
 			if (Input.GetAxis("Mouse ScrollWheel") > 0f || gamepadAnyButtonDown5)
 			{
 				// Scrolling forward / right bumper
 				if (inFocusMode) {
 					// Move DoF focus further away
-					m_dofSettings.focusDistance.value = m_dofSettings.focusDistance.GetValue<float>() + 0.05f;
+					m_dofSettings.focusDistance.value = m_dofSettings.focusDistance.GetValue<float>() + (holdingSprint ? 1f : 0.05f);
 				}
 				else {
 					// FoV zoom in
@@ -176,7 +178,7 @@ namespace PhotoModeMod
 				// Scrolling backwards / left bumper
 				if (inFocusMode) {
 					// Move DoF focus further away
-					m_dofSettings.focusDistance.value = m_dofSettings.focusDistance.GetValue<float>() - 0.05f;
+					m_dofSettings.focusDistance.value = m_dofSettings.focusDistance.GetValue<float>() - (holdingSprint ? 1f : 0.05f);
 				}
 				else {
 					// FoV zoom out
@@ -188,7 +190,7 @@ namespace PhotoModeMod
 			Vector3 moveVector = InputToMoveVector() * cfg_movementSpeed.Value * Time.fixedDeltaTime;
 
 			// Speed up movement when shift key held
-			if (Input.GetKey(KeyCode.LeftShift) || gamepadAnyButton0) {
+			if (holdingSprint) {
 				moveVector *= cfg_movementSprintMult.Value;
 			}
 
@@ -242,7 +244,7 @@ namespace PhotoModeMod
 			camTransform.rotation = rotation;
 		}
 
-		private void HandleInputs()
+		private void ProcessInputs()
 		{
 			gamepadAnyDpadHorizontal = Input.GetAxisRaw("Joy1Axis6") + Input.GetAxisRaw("Joy2Axis6") + Input.GetAxisRaw("Joy3Axis6") + Input.GetAxisRaw("Joy4Axis6");
 			gamepadAnyDpadVertical = Input.GetAxisRaw("Joy1Axis7") + Input.GetAxisRaw("Joy2Axis7") + Input.GetAxisRaw("Joy3Axis7") + Input.GetAxisRaw("Joy4Axis7");
@@ -451,31 +453,54 @@ namespace PhotoModeMod
 		public static void DrawInfoText()
 		{
 			float xOffset = 10;
-			float xOffset2 = 310;
+			float xOffset2 = 200;
+			float xOffset3 = 450;
+
+						string keyboardBinds = @"<b><color=cyan><size=20>
+KEYBOARD
+------------------
+Space / LControl
+Keyboard P
+Keyboard H
+LShift
+Keyboard K
+Q / E
+Mouse Scroll
+Hold F
+</size></color></b>";
+
+			string gamepadBinds = @"<b><color=cyan><size=20>
+| GAMEPAD
+-----------------------
+| L-Trigger / R-Trigger
+| Gamepad Y
+| Gamepad X
+| Gamepad A
+| Dpad ▲
+| Dpad ◄ / ►
+| L-Bumper / R-Bumper
+| Hold DPAD ▼
+</size></color></b>";
+
+			string bindDescriptions = @"<b><color=cyan><size=20>
+| Action
+--------------------------------
+| Move up and down
+| Toggle Photo Mode
+| Toggle the game HUD and UI
+| Speed up actions
+| Reset camera rotation and FoV
+| Tilt camera left and right
+| Change Field of View
+| DoF mode (use fov controls)
+</size></color></b>";
 
 			GUI.Label(new Rect(xOffset, 5, 1000, 200), "<b><color=white><size=14>DevdudeX's Photo Mode v"+ MOD_VERSION +"</size></color></b>");
 			GUI.Label(new Rect(xOffset, 200, 1000, 200), "<b><color=lime><size=30>Photo Mode Active</size></color></b>");
 
-			GUI.Label(new Rect(xOffset, 230, 1000, 200), "<b><color=cyan><size=30>Toggle Photo Mode</size></color></b>");
-			GUI.Label(new Rect(xOffset2, 230, 1000, 200), "<b><color=cyan><size=30>|    [Keyboard P] or [Gamepad Y]</size></color></b>");
-
-			GUI.Label(new Rect(xOffset, 260, 1000, 200), "<b><color=cyan><size=30>Toggle HUD</size></color></b>");
-			GUI.Label(new Rect(xOffset2, 260, 1000, 200), "<b><color=cyan><size=30>|    [Keyboard H] or [Gamepad X]</size></color></b>");
-
-			GUI.Label(new Rect(xOffset, 290, 1000, 200), "<b><color=cyan><size=30>Change FoV</size></color></b>");
-			GUI.Label(new Rect(xOffset2, 290, 1000, 200), "<b><color=cyan><size=30>|    [Mouse Scroll] or [LB, RB]</size></color></b>");
-
-			GUI.Label(new Rect(xOffset, 320, 1000, 200), "<b><color=cyan><size=30>Tilt Camera</size></color></b>");
-			GUI.Label(new Rect(xOffset2, 320, 1000, 200), "<b><color=cyan><size=30>|    [Keyboard Q, E] or [Horizontal DPAD]</size></color></b>");
-
-			GUI.Label(new Rect(xOffset, 350, 1000, 200), "<b><color=cyan><size=30>Speed Modifier</size></color></b>");
-			GUI.Label(new Rect(xOffset2, 350, 1000, 200), "<b><color=cyan><size=30>|    [LShift] or [Gamepad A]</size></color></b>");
-
-			GUI.Label(new Rect(xOffset, 380, 1000, 200), "<b><color=cyan><size=30>Speed Modifier</size></color></b>");
-			GUI.Label(new Rect(xOffset2, 380, 1000, 200), "<b><color=cyan><size=30>|    [LShift] or [Gamepad A]</size></color></b>");
-
-			GUI.Label(new Rect(xOffset, 410, 1000, 200), "<b><color=red><size=30>Reset Angles</size></color></b>");
-			GUI.Label(new Rect(xOffset2, 410, 1000, 200), "<b><color=cyan><size=30>|    [Keyboard K] or [DPAD Up]</size></color></b>");
+			GUI.Label(new Rect(xOffset, 230, 2000, 2000), keyboardBinds);
+			GUI.Label(new Rect(xOffset2, 230, 2000, 2000), gamepadBinds);
+			GUI.Label(new Rect(xOffset3, 230, 2000, 2000), bindDescriptions);
 		}
 		public override void OnDeinitializeMelon()
 		{

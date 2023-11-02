@@ -4,6 +4,9 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>PhotoMode</AssemblyName>
+    <Authors>DevdudeX</Authors>
+    <Description>A mod that adds a photo mode for Lonely Mountains: Downhill.</Description>
   </PropertyGroup>
 
   <ItemGroup>
