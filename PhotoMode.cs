@@ -7,14 +7,14 @@ using UnityEngine.Rendering.PostProcessing;
 // Megagon
 using Il2CppMegagon.Downhill.Cameras;
 
-[assembly: MelonInfo(typeof(PhotoMode), "Photo Mode", "1.0.2", "DevdudeX")]
+[assembly: MelonInfo(typeof(PhotoMode), "Photo Mode", "1.0.4", "DevdudeX")]
 [assembly: MelonGame()]
 namespace PhotoModeMod
 {
 	public class PhotoMode : MelonMod
 	{
 		// Keep this updated!
-		private const string MOD_VERSION = "1.0.2";
+		private const string MOD_VERSION = "1.0.4";
 		public static PhotoMode instance;
 		private KeyCode photoModeToggleKey;
 		private KeyCode uiToggleKey;
@@ -66,7 +66,9 @@ namespace PhotoModeMod
 		private float rotRoll;
 
 		private bool inPhotoMode;
+		private bool inFocusMode;
 		private bool hasDOFSettings;
+		private bool dpadDownBlocked;
 		private float baseTimeScale;
 		private float baseFoV;
 		private float baseFocusDistanceDoF;
@@ -100,8 +102,6 @@ namespace PhotoModeMod
 			uiToggleKey = KeyCode.H;
 			settingsResetKey = KeyCode.K;
 			focusModeModifierKey = KeyCode.F;
-
-			MelonEvents.OnGUI.Subscribe(DrawInfoText, 100);
 		}
 
 		public override void OnInitializeMelon()
@@ -142,6 +142,10 @@ namespace PhotoModeMod
 			mainSettingsCat.SaveToFile();
 			mouseSettingsCat.SaveToFile();
 			gamepadSettingsCat.SaveToFile();
+
+
+			// FIXME:
+			MelonEvents.OnGUI.Subscribe(DrawInfoText, 100); // Register the info label
 		}
 
 		public override void OnLateUpdate()
@@ -158,7 +162,7 @@ namespace PhotoModeMod
 
 		private void CameraLogic()
 		{
-			bool inFocusMode = hasDOFSettings && (Input.GetKey(focusModeModifierKey) || gamepadAnyDpadVertical < 0);
+			//inFocusMode = hasDOFSettings && (Input.GetKey(focusModeModifierKey) || gamepadAnyDpadVertical < 0);
 			bool holdingSprint = Input.GetKey(KeyCode.LeftShift) || gamepadAnyButton0;
 
 			if (Input.GetAxis("Mouse ScrollWheel") > 0f || gamepadAnyButtonDown5)
@@ -294,6 +298,21 @@ namespace PhotoModeMod
 			{
 				mainCameraComponent.fieldOfView = baseFoV;
 				rotRoll = 0;
+			}
+
+			// Treat the dpad more like a button
+			if (gamepadAnyDpadVertical == 0 && dpadDownBlocked == true) {
+				dpadDownBlocked = false;
+			}
+			if (hasDOFSettings)
+			{
+				if (Input.GetKeyDown(focusModeModifierKey)) {
+					inFocusMode = !inFocusMode;
+				}
+				else if (gamepadAnyDpadVertical < 0 && dpadDownBlocked == false) {
+					inFocusMode = !inFocusMode;
+					dpadDownBlocked = true;
+				}
 			}
 		}
 
@@ -450,13 +469,13 @@ namespace PhotoModeMod
 			return 0;
 		}
 
-		public static void DrawInfoText()
+		public void DrawInfoText()
 		{
 			float xOffset = 10;
 			float xOffset2 = 200;
 			float xOffset3 = 450;
 
-						string keyboardBinds = @"<b><color=cyan><size=20>
+			string keyboardBinds = @"<b><color=cyan><size=20>
 KEYBOARD
 ------------------
 Space / LControl
@@ -466,7 +485,7 @@ LShift
 Keyboard K
 Q / E
 Mouse Scroll
-Hold F
+F
 </size></color></b>";
 
 			string gamepadBinds = @"<b><color=cyan><size=20>
@@ -479,7 +498,7 @@ Hold F
 | Dpad ▲
 | Dpad ◄ / ►
 | L-Bumper / R-Bumper
-| Hold DPAD ▼
+| DPAD ▼
 </size></color></b>";
 
 			string bindDescriptions = @"<b><color=cyan><size=20>
@@ -492,15 +511,16 @@ Hold F
 | Reset camera rotation and FoV
 | Tilt camera left and right
 | Change Field of View
-| DoF mode (use fov controls)
+| Toggle DoF mode (use fov controls)
 </size></color></b>";
 
-			GUI.Label(new Rect(xOffset, 5, 1000, 200), "<b><color=white><size=14>DevdudeX's Photo Mode v"+ MOD_VERSION +"</size></color></b>");
+			GUI.Label(new Rect(xOffset, 5, 1000, 200), $"<b><color=white><size=14>DevdudeX's Photo Mode v{MOD_VERSION}</size></color></b>");
 			GUI.Label(new Rect(xOffset, 200, 1000, 200), "<b><color=lime><size=30>Photo Mode Active</size></color></b>");
 
 			GUI.Label(new Rect(xOffset, 230, 2000, 2000), keyboardBinds);
 			GUI.Label(new Rect(xOffset2, 230, 2000, 2000), gamepadBinds);
 			GUI.Label(new Rect(xOffset3, 230, 2000, 2000), bindDescriptions);
+			GUI.Label(new Rect(xOffset, 490, 1000, 200), $"<b><color={(inFocusMode ? "lime" : "white")}><size=20>Focus mode: {inFocusMode}</size></color></b>");
 		}
 		public override void OnDeinitializeMelon()
 		{

@@ -1,4 +1,4 @@
-# Photo Mode for Lonely Mountains: Downhill
+# DevdudeX's Photo Mode for Lonely Mountains: Downhill
 A MelonLoader mod that lets you pause time and fly around to position the camera freely, perfect for taking screenshots!
 
 ![Photo mode](/images/banner.png?raw=true)
