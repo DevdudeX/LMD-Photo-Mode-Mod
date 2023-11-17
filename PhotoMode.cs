@@ -142,10 +142,6 @@ namespace PhotoModeMod
 			mainSettingsCat.SaveToFile();
 			mouseSettingsCat.SaveToFile();
 			gamepadSettingsCat.SaveToFile();
-
-
-			// FIXME:
-			MelonEvents.OnGUI.Subscribe(DrawInfoText, 100); // Register the info label
 		}
 
 		public override void OnLateUpdate()
