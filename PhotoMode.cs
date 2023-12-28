@@ -68,17 +68,13 @@ namespace PhotoModeMod
 		private bool inPhotoMode;
 		private bool inFocusMode;
 		private bool hasDOFSettings;
-		private bool dpadDownBlocked;
 		private float baseTimeScale;
 		private float baseFoV;
 		private float baseFocusDistanceDoF;
 
 		// Inputs
 		private float anyGamepadDpadHorizontal;
-
 		private float anyGamepadDpadVertical;
-		private bool anyGamepadDpadDownOnPress;
-
 		private float anyGamepadTriggerInputL;
 		private float anyGamepadTriggerInputR;
 		private float anyGamepadStickHorizontalR;
@@ -99,7 +95,7 @@ namespace PhotoModeMod
 		private bool anyGamepadBtnDown7;
 
 		// Used to treat dpad as a button
-		private bool dpadVerticalBlocked = false;
+		private bool dpadDownBlocked;
 
 		public override void OnEarlyInitializeMelon()
 		{
@@ -164,9 +160,6 @@ namespace PhotoModeMod
 			HandlePhotoModeControls();
 
 			CameraLogic();
-
-			// Reset key down states at the end of the frame
-			anyGamepadDpadDownOnPress = false;
 		}
 
 		private void CameraLogic()
@@ -274,20 +267,6 @@ namespace PhotoModeMod
 			anyGamepadBtnDown4 = Input.GetKeyDown(KeyCode.Joystick1Button4) || Input.GetKeyDown(KeyCode.Joystick2Button4) || Input.GetKeyDown(KeyCode.Joystick3Button4) || Input.GetKeyDown(KeyCode.Joystick4Button4);
 			anyGamepadBtnDown5 = Input.GetKeyDown(KeyCode.Joystick1Button5) || Input.GetKeyDown(KeyCode.Joystick2Button5) || Input.GetKeyDown(KeyCode.Joystick3Button5) || Input.GetKeyDown(KeyCode.Joystick4Button5);
 			anyGamepadBtnDown7 = Input.GetKeyDown(KeyCode.Joystick1Button7) || Input.GetKeyDown(KeyCode.Joystick2Button7) || Input.GetKeyDown(KeyCode.Joystick3Button7) || Input.GetKeyDown(KeyCode.Joystick4Button7);
-
-			// Hit full dpad and its allowed, set to true
-			if ((anyGamepadDpadVertical < 0) && (dpadVerticalBlocked==false))
-			{
-				anyGamepadDpadDownOnPress = true;
-				dpadVerticalBlocked = true; //Disable it
-			}
-			else if (IsBetweenInclusive(anyGamepadDpadVertical, -0.1f, 0.1f))
-			{
-				//if they release (small deadzone), allow them to hit it again.
-				anyGamepadDpadDownOnPress = false;
-				dpadVerticalBlocked = false;
-			}
-
 
 			if (Input.GetKeyDown(photoModeToggleKey) || anyGamepadBtnDown3)
 			{

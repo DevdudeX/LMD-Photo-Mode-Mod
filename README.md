@@ -37,9 +37,10 @@ This file can be opened with any text editor and contains all the mods settings.
 | P                     | Y Button                  | Toggle photo mode                    |
 | H                     | X Button                  | Toggle the game HUD and UI           |
 | K                     | Dpad ▲                    | Reset camera rotation and FoV        |
-| Mouse Scroll          | L-Bumper / R-Bumper       | Change Field of View                 |
+| F                     | Dpad ▼                    | Switch between FoV or DoF mode       |
+| Mouse Scroll          | L-Bumper / R-Bumper       | Adjust FoV or DoF focus              |
 | Q / E                 | Dpad ◄ / ►                | Tilt camera left and right           |
-| Hold F + Mouse Scroll | Hold Dpad ▼ + LB / RB     | Change Depth of Field focus distance |
+
 
 
 #### Known Issues & Fixes
