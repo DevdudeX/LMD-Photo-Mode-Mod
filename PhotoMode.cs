@@ -74,26 +74,32 @@ namespace PhotoModeMod
 		private float baseFocusDistanceDoF;
 
 		// Inputs
-		private float gamepadAnyDpadHorizontal;
-		private float gamepadAnyDpadVertical;
-		private float gamepadAnyTriggerInputL;
-		private float gamepadAnyTriggerInputR;
-		private float gamepadHorizontalInputStickR;
-		private float gamepadVerticalInputStickR;
+		private float anyGamepadDpadHorizontal;
+
+		private float anyGamepadDpadVertical;
+		private bool anyGamepadDpadDownOnPress;
+
+		private float anyGamepadTriggerInputL;
+		private float anyGamepadTriggerInputR;
+		private float anyGamepadStickHorizontalR;
+		private float anyGamepadStickVerticalR;
 		/// <summary>Gamepad [A] held state</summary>
-		private bool gamepadAnyButton0;
+		private bool anyGamepadBtn0;
 		/// <summary>Gamepad [B] pressed state</summary>
-		private bool gamepadAnyButtonDown1;
+		private bool anyGamepadBtnDown1;
 		/// <summary>Gamepad [X] pressed state</summary>
-		private bool gamepadAnyButtonDown2;
+		private bool anyGamepadBtnDown2;
 		/// <summary>Gamepad [Y] pressed state</summary>
-		private bool gamepadAnyButtonDown3;
+		private bool anyGamepadBtnDown3;
 		/// <summary>Left Bumper pressed state</summary>
-		private bool gamepadAnyButtonDown4;
+		private bool anyGamepadBtnDown4;
 		/// <summary>Right Bumper pressed state</summary>
-		private bool gamepadAnyButtonDown5;
+		private bool anyGamepadBtnDown5;
 		/// <summary>Start Button pressed state</summary>
-		private bool gamepadAnyButtonDown7;
+		private bool anyGamepadBtnDown7;
+
+		// Used to treat dpad as a button
+		private bool dpadVerticalBlocked = false;
 
 		public override void OnEarlyInitializeMelon()
 		{
@@ -144,24 +150,31 @@ namespace PhotoModeMod
 			gamepadSettingsCat.SaveToFile();
 		}
 
-		public override void OnLateUpdate()
+		public override void OnUpdate()
 		{
 			ProcessInputs();
 
+		}
+
+		public override void OnLateUpdate()
+		{
 			if (!inPhotoMode) {
 				return;
 			}
 			HandlePhotoModeControls();
 
 			CameraLogic();
+
+			// Reset key down states at the end of the frame
+			anyGamepadDpadDownOnPress = false;
 		}
 
 		private void CameraLogic()
 		{
-			//inFocusMode = hasDOFSettings && (Input.GetKey(focusModeModifierKey) || gamepadAnyDpadVertical < 0);
-			bool holdingSprint = Input.GetKey(KeyCode.LeftShift) || gamepadAnyButton0;
+			//inFocusMode = hasDOFSettings && (Input.GetKey(focusModeModifierKey) || anyGamepadDpadVertical < 0);
+			bool holdingSprint = Input.GetKey(KeyCode.LeftShift) || anyGamepadBtn0;
 
-			if (Input.GetAxis("Mouse ScrollWheel") > 0f || gamepadAnyButtonDown5)
+			if (Input.GetAxis("Mouse ScrollWheel") > 0f || anyGamepadBtnDown5)
 			{
 				// Scrolling forward / right bumper
 				if (inFocusMode) {
@@ -173,7 +186,7 @@ namespace PhotoModeMod
 					mainCameraComponent.fieldOfView -= 1;
 				}
 			}
-			else if (Input.GetAxis("Mouse ScrollWheel") < 0f || gamepadAnyButtonDown4)
+			else if (Input.GetAxis("Mouse ScrollWheel") < 0f || anyGamepadBtnDown4)
 			{
 				// Scrolling backwards / left bumper
 				if (inFocusMode) {
@@ -213,16 +226,16 @@ namespace PhotoModeMod
 
 			// Controller input
 			if (cfg_gamepadInvertHorizontal.Value) {
-				rotHorizontal -= ApplyInnerDeadzone(gamepadHorizontalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensHorizontal.Value * cfg_gamepadSensMultiplier.Value;
+				rotHorizontal -= ApplyInnerDeadzone(anyGamepadStickHorizontalR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensHorizontal.Value * cfg_gamepadSensMultiplier.Value;
 			}
 			else {
-				rotHorizontal += ApplyInnerDeadzone(gamepadHorizontalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensHorizontal.Value * cfg_gamepadSensMultiplier.Value;
+				rotHorizontal += ApplyInnerDeadzone(anyGamepadStickHorizontalR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensHorizontal.Value * cfg_gamepadSensMultiplier.Value;
 			}
 			if (cfg_gamepadInvertVertical.Value) {
-				rotVertical += ApplyInnerDeadzone(gamepadVerticalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensVertical.Value * cfg_gamepadSensMultiplier.Value;
+				rotVertical += ApplyInnerDeadzone(anyGamepadStickVerticalR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensVertical.Value * cfg_gamepadSensMultiplier.Value;
 			}
 			else {
-				rotVertical -= ApplyInnerDeadzone(gamepadVerticalInputStickR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensVertical.Value * cfg_gamepadSensMultiplier.Value;
+				rotVertical -= ApplyInnerDeadzone(anyGamepadStickVerticalR, cfg_gamepadStickDeadzoneR.Value) * cfg_gamepadSensVertical.Value * cfg_gamepadSensMultiplier.Value;
 			}
 
 			// Clamp the up-down rotation
@@ -234,7 +247,7 @@ namespace PhotoModeMod
 			if (Input.GetKeyDown(KeyCode.E)) {
 				rotRoll -= 1;
 			}
-			rotRoll += -gamepadAnyDpadHorizontal * 4f * Time.fixedDeltaTime;
+			rotRoll += -anyGamepadDpadHorizontal * 4f * Time.fixedDeltaTime;
 
 			rotation = Quaternion.Euler(-rotVertical, rotHorizontal, rotRoll);
 			Vector3 newPosition = camTransform.position + moveVector;
@@ -246,39 +259,53 @@ namespace PhotoModeMod
 
 		private void ProcessInputs()
 		{
-			gamepadAnyDpadHorizontal = Input.GetAxisRaw("Joy1Axis6") + Input.GetAxisRaw("Joy2Axis6") + Input.GetAxisRaw("Joy3Axis6") + Input.GetAxisRaw("Joy4Axis6");
-			gamepadAnyDpadVertical = Input.GetAxisRaw("Joy1Axis7") + Input.GetAxisRaw("Joy2Axis7") + Input.GetAxisRaw("Joy3Axis7") + Input.GetAxisRaw("Joy4Axis7");
+			anyGamepadDpadHorizontal = Input.GetAxisRaw("Joy1Axis6") + Input.GetAxisRaw("Joy2Axis6") + Input.GetAxisRaw("Joy3Axis6") + Input.GetAxisRaw("Joy4Axis6");
+			anyGamepadDpadVertical = Input.GetAxisRaw("Joy1Axis7") + Input.GetAxisRaw("Joy2Axis7") + Input.GetAxisRaw("Joy3Axis7") + Input.GetAxisRaw("Joy4Axis7");
 
-			gamepadAnyTriggerInputL = Input.GetAxisRaw("Joy1Axis9") + Input.GetAxisRaw("Joy2Axis9") + Input.GetAxisRaw("Joy3Axis9") + Input.GetAxisRaw("Joy4Axis9");
-			gamepadAnyTriggerInputR = Input.GetAxisRaw("Joy1Axis10") + Input.GetAxisRaw("Joy2Axis10") + Input.GetAxisRaw("Joy3Axis10") + Input.GetAxisRaw("Joy4Axis10");
-			gamepadHorizontalInputStickR = Input.GetAxisRaw("Joy1Axis4") + Input.GetAxisRaw("Joy2Axis4") + Input.GetAxisRaw("Joy3Axis4") + Input.GetAxisRaw("Joy4Axis4");
-			gamepadVerticalInputStickR = Input.GetAxisRaw("Joy1Axis5") + Input.GetAxisRaw("Joy2Axis5") + Input.GetAxisRaw("Joy3Axis5") + Input.GetAxisRaw("Joy4Axis5");
+			anyGamepadTriggerInputL = Input.GetAxisRaw("Joy1Axis9") + Input.GetAxisRaw("Joy2Axis9") + Input.GetAxisRaw("Joy3Axis9") + Input.GetAxisRaw("Joy4Axis9");
+			anyGamepadTriggerInputR = Input.GetAxisRaw("Joy1Axis10") + Input.GetAxisRaw("Joy2Axis10") + Input.GetAxisRaw("Joy3Axis10") + Input.GetAxisRaw("Joy4Axis10");
+			anyGamepadStickHorizontalR = Input.GetAxisRaw("Joy1Axis4") + Input.GetAxisRaw("Joy2Axis4") + Input.GetAxisRaw("Joy3Axis4") + Input.GetAxisRaw("Joy4Axis4");
+			anyGamepadStickVerticalR = Input.GetAxisRaw("Joy1Axis5") + Input.GetAxisRaw("Joy2Axis5") + Input.GetAxisRaw("Joy3Axis5") + Input.GetAxisRaw("Joy4Axis5");
 
-			gamepadAnyButton0 = Input.GetKey(KeyCode.Joystick1Button0) || Input.GetKey(KeyCode.Joystick2Button0) || Input.GetKey(KeyCode.Joystick3Button0) || Input.GetKey(KeyCode.Joystick4Button0);
-			gamepadAnyButtonDown1 = Input.GetKeyDown(KeyCode.Joystick1Button1) || Input.GetKeyDown(KeyCode.Joystick2Button1) || Input.GetKeyDown(KeyCode.Joystick3Button1) || Input.GetKeyDown(KeyCode.Joystick4Button1);
-			gamepadAnyButtonDown2 = Input.GetKeyDown(KeyCode.Joystick1Button2) || Input.GetKeyDown(KeyCode.Joystick2Button2) || Input.GetKeyDown(KeyCode.Joystick3Button2) || Input.GetKeyDown(KeyCode.Joystick4Button2);
-			gamepadAnyButtonDown3 = Input.GetKeyDown(KeyCode.Joystick1Button3) || Input.GetKeyDown(KeyCode.Joystick2Button3) || Input.GetKeyDown(KeyCode.Joystick3Button3) || Input.GetKeyDown(KeyCode.Joystick4Button3);
-			gamepadAnyButtonDown4 = Input.GetKeyDown(KeyCode.Joystick1Button4) || Input.GetKeyDown(KeyCode.Joystick2Button4) || Input.GetKeyDown(KeyCode.Joystick3Button4) || Input.GetKeyDown(KeyCode.Joystick4Button4);
-			gamepadAnyButtonDown5 = Input.GetKeyDown(KeyCode.Joystick1Button5) || Input.GetKeyDown(KeyCode.Joystick2Button5) || Input.GetKeyDown(KeyCode.Joystick3Button5) || Input.GetKeyDown(KeyCode.Joystick4Button5);
-			gamepadAnyButtonDown7 = Input.GetKeyDown(KeyCode.Joystick1Button7) || Input.GetKeyDown(KeyCode.Joystick2Button7) || Input.GetKeyDown(KeyCode.Joystick3Button7) || Input.GetKeyDown(KeyCode.Joystick4Button7);
+			anyGamepadBtn0 = Input.GetKey(KeyCode.Joystick1Button0) || Input.GetKey(KeyCode.Joystick2Button0) || Input.GetKey(KeyCode.Joystick3Button0) || Input.GetKey(KeyCode.Joystick4Button0);
+			anyGamepadBtnDown1 = Input.GetKeyDown(KeyCode.Joystick1Button1) || Input.GetKeyDown(KeyCode.Joystick2Button1) || Input.GetKeyDown(KeyCode.Joystick3Button1) || Input.GetKeyDown(KeyCode.Joystick4Button1);
+			anyGamepadBtnDown2 = Input.GetKeyDown(KeyCode.Joystick1Button2) || Input.GetKeyDown(KeyCode.Joystick2Button2) || Input.GetKeyDown(KeyCode.Joystick3Button2) || Input.GetKeyDown(KeyCode.Joystick4Button2);
+			anyGamepadBtnDown3 = Input.GetKeyDown(KeyCode.Joystick1Button3) || Input.GetKeyDown(KeyCode.Joystick2Button3) || Input.GetKeyDown(KeyCode.Joystick3Button3) || Input.GetKeyDown(KeyCode.Joystick4Button3);
+			anyGamepadBtnDown4 = Input.GetKeyDown(KeyCode.Joystick1Button4) || Input.GetKeyDown(KeyCode.Joystick2Button4) || Input.GetKeyDown(KeyCode.Joystick3Button4) || Input.GetKeyDown(KeyCode.Joystick4Button4);
+			anyGamepadBtnDown5 = Input.GetKeyDown(KeyCode.Joystick1Button5) || Input.GetKeyDown(KeyCode.Joystick2Button5) || Input.GetKeyDown(KeyCode.Joystick3Button5) || Input.GetKeyDown(KeyCode.Joystick4Button5);
+			anyGamepadBtnDown7 = Input.GetKeyDown(KeyCode.Joystick1Button7) || Input.GetKeyDown(KeyCode.Joystick2Button7) || Input.GetKeyDown(KeyCode.Joystick3Button7) || Input.GetKeyDown(KeyCode.Joystick4Button7);
 
-			if (Input.GetKeyDown(photoModeToggleKey) || gamepadAnyButtonDown3)
+			// Hit full dpad and its allowed, set to true
+			if ((anyGamepadDpadVertical < 0) && (dpadVerticalBlocked==false))
+			{
+				anyGamepadDpadDownOnPress = true;
+				dpadVerticalBlocked = true; //Disable it
+			}
+			else if (IsBetweenInclusive(anyGamepadDpadVertical, -0.1f, 0.1f))
+			{
+				//if they release (small deadzone), allow them to hit it again.
+				anyGamepadDpadDownOnPress = false;
+				dpadVerticalBlocked = false;
+			}
+
+
+			if (Input.GetKeyDown(photoModeToggleKey) || anyGamepadBtnDown3)
 			{
 				TogglePhotoMode();
 			}
 
-			if (inPhotoMode && (Input.GetKey(KeyCode.Escape) || Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.Backspace) || gamepadAnyButtonDown1)) {
+			if (inPhotoMode && (Input.GetKey(KeyCode.Escape) || Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.Backspace) || anyGamepadBtnDown1)) {
 				TogglePhotoMode(false);
 			}
 
 			// Here to allow disabling the game HUD.
-			if (Input.GetKeyDown(uiToggleKey) || gamepadAnyButtonDown2)
+			if (Input.GetKeyDown(uiToggleKey) || anyGamepadBtnDown2)
 			{
 				ToggleGameHUD();
 			}
 
 			// Force enable hud when opening menu
-			if (Input.GetKey(KeyCode.Escape) || gamepadAnyButtonDown7) {
+			if (Input.GetKey(KeyCode.Escape) || anyGamepadBtnDown7) {
 				ToggleGameHUD(true, false);
 			}
 		}
@@ -290,14 +317,14 @@ namespace PhotoModeMod
 				return;
 			}
 
-			if (Input.GetKeyDown(settingsResetKey) || gamepadAnyDpadVertical > 0)
+			if (Input.GetKeyDown(settingsResetKey) || anyGamepadDpadVertical > 0)
 			{
 				mainCameraComponent.fieldOfView = baseFoV;
 				rotRoll = 0;
 			}
 
 			// Treat the dpad more like a button
-			if (gamepadAnyDpadVertical == 0 && dpadDownBlocked == true) {
+			if (anyGamepadDpadVertical == 0 && dpadDownBlocked == true) {
 				dpadDownBlocked = false;
 			}
 			if (hasDOFSettings)
@@ -305,7 +332,7 @@ namespace PhotoModeMod
 				if (Input.GetKeyDown(focusModeModifierKey)) {
 					inFocusMode = !inFocusMode;
 				}
-				else if (gamepadAnyDpadVertical < 0 && dpadDownBlocked == false) {
+				else if (anyGamepadDpadVertical < 0 && dpadDownBlocked == false) {
 					inFocusMode = !inFocusMode;
 					dpadDownBlocked = true;
 				}
@@ -396,8 +423,8 @@ namespace PhotoModeMod
 				direction += Vector3.down;
 			}
 
-			direction += ApplyInnerDeadzone(gamepadAnyTriggerInputR, cfg_gamepadTriggerDeadzoneR.Value) * Vector3.up;
-			direction += ApplyInnerDeadzone(gamepadAnyTriggerInputL, cfg_gamepadTriggerDeadzoneL.Value) * Vector3.down;
+			direction += ApplyInnerDeadzone(anyGamepadTriggerInputR, cfg_gamepadTriggerDeadzoneR.Value) * Vector3.up;
+			direction += ApplyInnerDeadzone(anyGamepadTriggerInputL, cfg_gamepadTriggerDeadzoneL.Value) * Vector3.down;
 
 			direction += ApplyInnerDeadzone(Input.GetAxisRaw("Vertical"), cfg_gamepadStickDeadzoneL.Value) * camTransform.forward;
 			direction += ApplyInnerDeadzone(Input.GetAxisRaw("Horizontal"), cfg_gamepadStickDeadzoneL.Value) * camTransform.right;
@@ -434,6 +461,14 @@ namespace PhotoModeMod
 			else {
 				MelonEvents.OnGUI.Unsubscribe(DrawInfoText);
 			}
+		}
+
+		/// <summary>
+		/// Checks if the value is within the min and max.
+		/// </summary>
+		private static bool IsBetweenInclusive(float num, float min, float max)
+		{
+			return num >= min && num <= max;
 		}
 
 		/// <summary>
