@@ -44,5 +44,6 @@ This file can be opened with any text editor and contains all the mods settings.
 
 
 #### Known Issues & Fixes
-- Game freezes on quitting: Use [`Alt + Tab`] to select the commandline window and then close it.
-- Controls are currently not rebindable
+- Controls are currently not rebindable.  
+- Game freezes on quitting: Add the `--quitfix` [MelonLoader launch option](https://github.com/LavaGang/MelonLoader#launch-options).  
+On steam: right-click on LMD --> Properties --> Launch Options --> Paste the command (with `--` infront!).

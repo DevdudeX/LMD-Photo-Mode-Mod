@@ -149,7 +149,6 @@ namespace PhotoModeMod
 		public override void OnUpdate()
 		{
 			ProcessInputs();
-
 		}
 
 		public override void OnLateUpdate()
